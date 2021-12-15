@@ -10,6 +10,10 @@ Well with this library you can! AsyncNodeLogger allows you to define a logger pe
 and will look up which logger to use based on context. It barely even feels like you are using
 anything different!
 
+## Installation
+
+`npm i node-logger-async`
+
 ## Usage
 
 ### Basic usage
@@ -82,3 +86,102 @@ const doSomethingAsync = async () => {
 logger.runWithNewContext(doSomethingAsync);
 logger.info("done"); // uses main bunyanLogger; 
 ```
+
+## Documentation
+
+### `Logger`
+
+Logger is an interface that defines the methods that loggers use to write to loggers. It defines the
+`info`, `warn`, `error`, `debug`, `trace`, and `log` methods.
+
+```typescript
+export interface Logger {
+ debug(...data: any[]): void;
+ debug(message?: any, ...optionalParams: any[]): void;
+ debug(message?: any, ...optionalParams: any[]): void;
+
+ error(...data: any[]): void;
+ error(message?: any, ...optionalParams: any[]): void;
+ error(message?: any, ...optionalParams: any[]): void;
+
+ info(...data: any[]): void;
+ info(message?: any, ...optionalParams: any[]): void;
+ info(message?: any, ...optionalParams: any[]): void;
+
+ log(...data: any[]): void;
+ log(message?: any, ...optionalParams: any[]): void;
+ log(message?: any, ...optionalParams: any[]): void;
+
+ trace(...data: any[]): void;
+ trace(message?: any, ...optionalParams: any[]): void;
+ trace(message?: any, ...optionalParams: any[]): void;
+
+
+ warn(...data: any[]): void;
+ warn(message?: any, ...optionalParams: any[]): void;
+ warn(message?: any, ...optionalParams: any[]): void;
+}
+```
+
+### `LoggerMiddleware<LoggerType extends Logger>`
+
+This defines a function that takes a logger, and then returns a logger. This logger can either be
+the same as the logger that was passed in, or a different logger. You can use this to define a way
+to hydrate context when a new logger is created.
+
+### `AsyncLogger<LoggerType extends Logger>`
+
+The AsyncLogger is a facade that manages the context for async logging. It passes calls to the logging
+methods to the chosen logger. The LoggerType is any type that satisfies the `Logger` Interface.
+
+#### `constructor(logger: LoggerType, middleware: LoggerMiddleware<LoggerType>)`
+
+Creates the AsyncLogger. The logger is the logger to use for actually performing the logging. The
+middleware is called right before a new async context is created.
+
+#### `public onSpawn(spawner: LoggerMiddleware<LoggerType>)`
+
+Adds a new middleware to the pipeline when a new logger is created for an async context.
+
+#### `runWithNewContext(cb: () => unknown, once?: LoggerMiddleWare<LoggerType>)`
+
+Runs the callback with a new context that has a logger bound to it. You can use the once parameter
+to run this middleware only for this single context.
+
+### Express middleware
+
+We have an easy to use middleware for express. You can use this middleware to spawn new contexts
+for you and to add some identifying information about the request ID. For example a request ID, a
+user ID, or the request path.
+
+```typescript
+import { AsyncLogger, createMiddleware } from "async-node-logger";
+import bunyan from "bunyan";
+import express from "express";
+
+const bunyanLogger = bunyan.createLogger({
+  name: "myapp",
+});
+
+const logger = new AsyncLogger(bunyanLogger);
+
+const app = express();
+app.use(createMiddleware(logger, (logger, request: express.Request) => {
+  const requestID = generateUniqueID();
+  return logger.child({
+    requestID,
+    path: request.originalUrl,
+  });
+}));
+
+app.get("/hello-world", (_, resp) => {
+  logger.info("I am here") // This will have a unique ID, and the original request path for the request
+});
+
+app.listen(3000, () => {
+  logger.info("listening on port 3000"); // Will be top level code
+})
+```
+
+Type Definition:
+`<LoggerType extends Logger>( logger: AsyncLogger<LoggerType>, requestHydrator?: RequestHydrator<LoggerType> => RequestHandler`;
