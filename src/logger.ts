@@ -13,9 +13,9 @@ export interface Logger {
 	info(message?: any, ...optionalParams: any[]): void;
 	info(message?: any, ...optionalParams: any[]): void;
 
-	log(...data: any[]): void;
-	log(message?: any, ...optionalParams: any[]): void;
-	log(message?: any, ...optionalParams: any[]): void;
+	log?(...data: any[]): void;
+	log?(message?: any, ...optionalParams: any[]): void;
+	log?(message?: any, ...optionalParams: any[]): void;
 
 	trace(...data: any[]): void;
 	trace(message?: any, ...optionalParams: any[]): void;
@@ -72,7 +72,11 @@ export class AsyncLogger<LoggerType extends Logger> implements Logger {
 	log(message?: any, ...optionalParams: any[]): void;
 	log(message?: any, ...optionalParams: any[]): void;
 	log(message?: any, ...optionalParams: any[]): void {
-		this.manager.getLogger().log(...arguments);
+		const logger = this.manager.getLogger();
+		if (logger.log) {
+			logger.log(...arguments);
+		}
+		logger.info(...arguments);
 	}
 	trace(...data: any[]): void;
 	trace(message?: any, ...optionalParams: any[]): void;
