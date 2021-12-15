@@ -1,12 +1,16 @@
 {
-	"name": "asynclogger",
+	"name": "async-node-logger",
 	"version": "1.0.0",
 	"description": "",
 	"main": "index.js",
 	"scripts": {
 		"build": "tsc",
-		"test": "jest"
+		"test": "jest",
+		"prepare": "npm run test && npm run build"
 	},
+	"files": [
+		"/dist/**"
+	],
 	"author": "",
 	"license": "ISC",
 	"devDependencies": {
