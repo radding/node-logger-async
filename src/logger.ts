@@ -90,4 +90,8 @@ export class AsyncLogger<LoggerType extends Logger> implements Logger {
 	warn(message?: any, ...optionalParams: any[]): void {
 		this.manager.getLogger().warn(...arguments);
 	}
+
+  public getLogger(): LoggerType {
+    return this.manager.getLogger();
+  }
 }
